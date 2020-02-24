@@ -43,11 +43,11 @@ class NeuralNetwork():
         self.nonlinearity_deep_prime = self.__leaky_relU_prime
 
         # initialising network activation function for output layer
-        self.nonlinearity_out = self.__tanh
-        self.nonlinearity_out_prime = self.__tanh_prime
+        self.nonlinearity_out = self.__sigmoid
+        self.nonlinearity_out_prime = self.__sigmoid_prime
 
         # initialising the cost function to use
-        self.costfunction = self.__delta_cost #self.__softmax_crossentropy_with_logits #
+        self.costfunction = self.__delta_cost 
 
     def __sigmoid(self, x):
         return 1. / (1. + np.exp(-x))
