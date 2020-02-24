@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import multilabel_confusion_matrix
 from sklearn.utils.multiclass import unique_labels
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, multilabel_confusion_matrix
 
 def plot_confusion_matrix(y_true, y_pred, classes,
                           normalize=False,
@@ -61,6 +62,7 @@ def plot_confusion_matrix(y_true, y_pred, classes,
 
     #fix for bug in jupyter
     ax.set_ylim(len(classes) - .5, - .5)
+    plt.show()
 
     return ax
 
@@ -113,3 +115,64 @@ def show_confusion(y_test_true, y_test_pred,class_names,mlcm=False):
 
     plot_confusion_matrix(y_test_true-1, y_test_pred-1, classes=class_names, title='Confusion matrix')
     plt.show()
+
+def plot_history(H, epochs):
+    # plot the training loss and accuracy
+    plt.figure(figsize=(12,12))
+    plt.plot(np.arange(0, epochs), H.history["loss"], label="train_loss")
+    plt.plot(np.arange(0, epochs), H.history["val_loss"], label="val_loss")
+    plt.plot(np.arange(0, epochs), H.history["accuracy"], label="train_acc")
+    plt.plot(np.arange(0, epochs), H.history["val_accuracy"], label="val_acc")
+    plt.title("Training Loss and Accuracy on Dataset")
+    plt.xlabel("Epoch #")
+    plt.ylabel("Loss/Accuracy")
+    plt.legend(loc="lower left")
+    plt.savefig('p_history.png')
+    plt.show()
+
+def show_batch(image_batch, label_batch, class_names):
+    plt.figure(figsize=(10,10))
+    for n in range(25):
+        ax = plt.subplot(5,5,n+1)
+        plt.imshow(image_batch[n])
+        plt.title(class_names[label_batch[n]==1][0].title())
+        plt.axis('off')
+    
+    plt.savefig('p_show_batch.png')
+    plt.show()
+
+def test_model(model, generator, class_names):
+    Y_pred = model.predict(generator)
+    y_pred = np.argmax(Y_pred, axis=1)
+    results = model.evaluate(generator) 
+    print('test loss, test acc:', results) #loss, acc
+    print('Confusion Matrix')
+    print(confusion_matrix(generator.classes, y_pred))
+    plt.savefig('p_confusion_matrix.png')
+    print('Classification Report')
+    print(classification_report(generator.classes, y_pred, target_names=class_names))
+    print("Test accuracy score", accuracy_score(generator.classes, y_pred))
+
+    ## Plot non-normalized confusion matrix
+    plot_confusion_matrix(generator.classes-1, y_pred-1, classes=class_names, title='Confusion matrix')
+    plt.show()
+
+    mlcm = multilabel_confusion_matrix(generator.classes,y_pred)
+    for j in range(len(mlcm)): 
+        cm=mlcm[j]
+        TP=cm[0][0]
+        TN=cm[1][1]
+        FN=cm[1][0]
+        FP=cm[0][1]
+
+        print("Class ", class_names[j])
+        print(cm)
+        c_accuracy = (TP+TN) / (TP+TN+FN+FP)
+        c_error = (FP+FN) / (TP+TN+FN+FP)
+        c_sensitivity = TP / (TP + FN)
+        c_specitivity = TN / (FP + TN)
+        print("Accuracy = ", c_accuracy)
+        print("Error rate = ", c_error)
+        print("Sensitivity = ", c_sensitivity)
+        print("Specitivity = ", c_specitivity)
+        print()
