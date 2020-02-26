@@ -6,7 +6,9 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import multilabel_confusion_matrix
 from sklearn.utils.multiclass import unique_labels
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, multilabel_confusion_matrix
+import pathlib
 
 def plot_confusion_matrix(y_true, y_pred, classes,
                           normalize=False,
@@ -70,7 +72,7 @@ def read_data():
 
     class_names = ["Tumor",  "Stroma",  "Complex", "Lympho", "Debris",  "Mucosa",  "Adipose",  "Empty"]
 
-    mcd = pd.read_csv('../colorectal-histology-mnist/' + 'hmnist_64_64_L.csv')
+    mcd = pd.read_csv('../../colorectal-histology-mnist/' + 'hmnist_64_64_L.csv')
     # Split the data set into independent(x) and dependent (y) data sets where the last column is the y
     x_len = mcd.shape[1]-1
     x = mcd.iloc[:,0:x_len].values
@@ -88,6 +90,17 @@ def read_data():
     y_hot = onehot.fit_transform(y.reshape(len(y), 1))
 
     return x_hist,y_hot,onehot,class_names
+
+def read_split_imagefiles(data_dir, class_names):
+    df = pd.DataFrame(columns=["filename","class"])
+    for distinct_class in class_names:
+        class_dir = pathlib.Path(data_dir, distinct_class)
+        for image_file in list(class_dir.glob('*.tif')):
+            name = distinct_class + "/" + image_file.name
+            df = df.append([{'filename':name, 'class':distinct_class}], ignore_index=True)
+
+    traindf, testdf = train_test_split(df, test_size=0.1, random_state=1001)
+    return traindf, testdf
 
 def show_confusion(y_test_true, y_test_pred,class_names,mlcm=False):
     cm = confusion_matrix(y_test_true, y_test_pred)
@@ -148,14 +161,14 @@ def test_model(model, generator, class_names):
     print('test loss, test acc:', results) #loss, acc
     print('Confusion Matrix')
     print(confusion_matrix(generator.classes, y_pred))
-    plt.savefig('p_confusion_matrix.png')
     print('Classification Report')
     print(classification_report(generator.classes, y_pred, target_names=class_names))
     print("Test accuracy score", accuracy_score(generator.classes, y_pred))
 
     ## Plot non-normalized confusion matrix
-    plot_confusion_matrix(generator.classes-1, y_pred-1, classes=class_names, title='Confusion matrix')
+    plot_confusion_matrix(generator.classes, y_pred, classes=class_names, title='Confusion matrix')
     plt.show()
+    plt.savefig('p_confusion_matrix.png')
 
     mlcm = multilabel_confusion_matrix(generator.classes,y_pred)
     for j in range(len(mlcm)): 
@@ -170,9 +183,9 @@ def test_model(model, generator, class_names):
         c_accuracy = (TP+TN) / (TP+TN+FN+FP)
         c_error = (FP+FN) / (TP+TN+FN+FP)
         c_sensitivity = TP / (TP + FN)
-        c_specitivity = TN / (FP + TN)
+        c_specificity = TN / (FP + TN)
         print("Accuracy = ", c_accuracy)
         print("Error rate = ", c_error)
         print("Sensitivity = ", c_sensitivity)
-        print("Specitivity = ", c_specitivity)
+        print("Specificity = ", c_specificity)
         print()
