@@ -129,19 +129,21 @@ def show_confusion(y_test_true, y_test_pred,class_names,mlcm=False):
     plot_confusion_matrix(y_test_true-1, y_test_pred-1, classes=class_names, title='Confusion matrix')
     plt.show()
 
-def plot_history(H, epochs):
+def plot_history(H):
+    epochs = len(H.history["accuracy"])
     # plot the training loss and accuracy
     plt.figure(figsize=(12,12))
-    plt.plot(np.arange(0, epochs), H.history["loss"], label="train_loss")
-    plt.plot(np.arange(0, epochs), H.history["val_loss"], label="val_loss")
-    plt.plot(np.arange(0, epochs), H.history["accuracy"], label="train_acc")
-    plt.plot(np.arange(0, epochs), H.history["val_accuracy"], label="val_acc")
+    plt.plot(np.arange(0, epochs), H.history["loss"], label="Train loss")
+    plt.plot(np.arange(0, epochs), H.history["val_loss"], label="Val loss")
+    plt.plot(np.arange(0, epochs), H.history["accuracy"], label="Train acc")
+    plt.plot(np.arange(0, epochs), H.history["val_accuracy"], label="Val acc")
     plt.title("Training Loss and Accuracy on Dataset")
-    plt.xlabel("Epoch #")
+    plt.xlabel("Epoch")
     plt.ylabel("Loss/Accuracy")
     plt.legend(loc="lower left")
     plt.savefig('p_history.png')
     plt.show()
+
 
 def show_batch(image_batch, label_batch, class_names):
     plt.figure(figsize=(10,10))

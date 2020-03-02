@@ -1,0 +1,21 @@
+# see: https://docs.floydhub.com/floyd_config
+machine: gpu
+env: tensorflow-2.1
+input:
+  - destination: mnist
+    source: hummerfisker/datasets/colorectal-histology-mnist/1
+description: GPU with biopixel_model
+command: python convolutional_nets.py
+
+#max_runtime: 3600
+#  - foo/datasets/yelp-food-test/1:test
+# You can also define multiple tasks to use with --task argument:
+#
+#task:
+#  evaluate:
+#    machine: gpu
+#    command: python evaluate.py
+#
+#  serve:
+#    machine: cpu
+#    mode: serve
