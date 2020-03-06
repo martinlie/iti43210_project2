@@ -28,86 +28,10 @@ from sklearn.preprocessing import LabelBinarizer
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import StandardScaler
 import pathlib
-
-def programtest_model(input_shape, class_names):
-    model = tf.keras.models.Sequential([
-        layers.Conv2D(2, (3, 3), activation=layers.LeakyReLU(alpha=0.1), input_shape=input_shape),
-        layers.Flatten(),
-        layers.Dense(8, activation='softmax')
-    ])
-
-    model.compile(optimizer='adam',
-        loss='categorical_crossentropy',
-        metrics=['accuracy'])
-
-    return model, "test_model", 2
-
-def convolutional_model(input_shape, class_names):
-    model = tf.keras.models.Sequential([
-        layers.Conv2D(32, (3, 3), activation=layers.LeakyReLU(alpha=0.01), input_shape=input_shape),
-        layers.Conv2D(32, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.BatchNormalization(),
-        layers.MaxPooling2D((2, 2)),
-        layers.Dropout(0.3),
-
-        layers.Conv2D(64, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.Conv2D(64, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.BatchNormalization(),
-        layers.MaxPooling2D((2, 2)),
-        layers.Dropout(0.3),
-
-        layers.Conv2D(128, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.Conv2D(128, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.BatchNormalization(),
-        layers.MaxPooling2D((2, 2)),
-        layers.Dropout(0.3),
-
-        layers.Conv2D(256, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.Conv2D(256, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.BatchNormalization(),
-        layers.MaxPooling2D((2, 2)),
-        layers.Dropout(0.3),
-
-        layers.Flatten(),
-        #layers.Dense(1024, activation=layers.LeakyReLU(alpha=0.01)), #activation='linear', activity_regularizer=regularizers.l1(0.0001)),
-        layers.Dense(128, activation='linear', activity_regularizer=regularizers.l1(0.0001)),
-        layers.LeakyReLU(alpha=0.01),
-        layers.Dropout(0.3),
-        layers.Dense(64, activation='linear', activity_regularizer=regularizers.l1(0.0001)),
-        layers.LeakyReLU(alpha=0.01), 
-        layers.Dense(8, activation='softmax')
-    ])
-
-    # https://keras.io/optimizers/
-    #decay_rate = 0.01 / 100. #learning_rate / epochs
-    #sgd = optimizers.SGD(learning_rate=0.01, momentum=0.9, nesterov=False) #, decay=decay_rate)
-    #rmsprop = optimizers.RMSprop(learning_rate=0.001, rho=0.9)
-    #adagrad = optimizers.Adagrad(learning_rate=0.01)
-    #adadelta = optimizers.Adadelta(learning_rate=1.0, rho=0.95)
-    #adam = optimizers.Adam(learning_rate=0.0001, beta_1=0.9, beta_2=0.999, amsgrad=False)
-
-    model.compile(optimizer='adam',
-        loss='categorical_crossentropy',
-        metrics=['accuracy'])
-
-    return model, "conv_model", 200
-
-def inception_model(input_shape, class_names):
-    model = tf.keras.models.Sequential([
-        InceptionV3(include_top=False, weights=None, input_shape=input_shape),  #'imagenet'  None
-        layers.GlobalAveragePooling2D(),
-        layers.Dense(512, activation='relu'), 
-        layers.Dropout(0.1),
-        layers.Dense(8, activation='softmax')
-    ])
-
-    sgd = optimizers.SGD(learning_rate=0.01, momentum=0.9, nesterov=False)
-    #adam = optimizers.Adam(learning_rate=0.0001, beta_1=0.9, beta_2=0.999, amsgrad=False)
-    model.compile(optimizer=sgd,
-        loss='categorical_crossentropy',
-        metrics=['accuracy'])
-    
-    return model, "inceptionv3_model", 200
+from net_models import *
+from net_inception import *
+from net_resnet50 import *
+from net_biopixel import *
 
 def load_model(model_name):
     return tf.keras.models.load_model(model_name,
@@ -134,21 +58,23 @@ def main(p):
     # Data augmentation, to increase the generalizability of our classifier, we may first randomly jitter points along the distribution by adding some random values
     # In-place data augmentation or on-the-fly data augmentation https://www.pyimagesearch.com/2019/07/08/keras-imagedatagenerator-and-data-augmentation/
     # Standardization is a data scaling technique that assumes that the distribution of the data is Gaussian and shifts the distribution of the data to have a mean of zero and a standard deviation of one.
-    #train_datagen = ImageDataGenerator( 
+    train_datagen = ImageDataGenerator( 
     #    rescale=1./255,
-        #rotation_range=45, 
-        #width_shift_range=.15,
-        #height_shift_range=.15,
-        #horizontal_flip=True,
-        ##shear_range=0.2,
-        #zoom_range=0.5,
+        rotation_range=45, 
+        width_shift_range=.15,
+        height_shift_range=.15,
+        horizontal_flip=True,
+        #shear_range=0.2,
+        zoom_range=0.5,
+        samplewise_center=True, # std & scale
+        samplewise_std_normalization=True,
     #    validation_split=0.2
-    #)
-    datagen = ImageDataGenerator(  # validation_datagen
+    )
+    val_datagen = ImageDataGenerator( 
         #rescale=1./255, # normalize
         samplewise_center=True, # std & scale
         samplewise_std_normalization=True,
-        validation_split=0.1
+        #validation_split=0.1
     )
     test_datagen = ImageDataGenerator(
         #rescale=1./255, # normalize
@@ -157,25 +83,28 @@ def main(p):
     )
 
     # Make df of all images and split on train / test set
-    traindf, testdf = read_split_imagefiles(data_dir, class_names)
+    traindf, valdf, testdf = read_split_imagefiles(data_dir, class_names)
+    duplicate_checkdf = pd.concat([traindf, valdf, testdf],ignore_index=True).drop_duplicates().reset_index(drop=True)
+    if traindf.shape[0] + valdf.shape[0] + testdf.shape[0] != duplicate_checkdf.shape[0]:
+        print("Duplicates detected! {} {} {} {}".format(traindf.shape[0], valdf.shape[0], testdf.shape[0], duplicate_checkdf.shape[0]))
 
-    train_generator = datagen.flow_from_dataframe( 
+    train_generator = train_datagen.flow_from_dataframe( 
         dataframe=traindf,
         directory=data_dir,
         shuffle=True,
         target_size=(img_height, img_width),
         batch_size=batch_size,
-        subset='training', 
+        #subset='training', 
         class_mode='categorical',
         classes = list(class_names))
 
-    validation_generator = datagen.flow_from_dataframe(
-        dataframe=traindf,
+    validation_generator = val_datagen.flow_from_dataframe(
+        dataframe=valdf,
         directory=data_dir,
         shuffle=True,
         target_size=(img_height, img_width),
         batch_size=batch_size,
-        subset='validation', 
+        #subset='validation', 
         class_mode='categorical',
         classes = list(class_names))
 
@@ -205,6 +134,7 @@ def main(p):
     #model, model_name, epochs = programtest_model(input_shape, class_names)
     #model, model_name, epochs = inception_model(input_shape, class_names)
     model, model_name, epochs = convolutional_model(input_shape, class_names)
+    #model, model_name, epochs = resnet50_model(input_shape, class_names)
     #model, model_name, epochs = biopixel_model(input_shape, class_names)
     #model, model_name, epochs = load_model("conv_model-100.h5")
     model.summary()
@@ -250,7 +180,6 @@ if __name__ == "__main__":
     model, test_generator, class_names = main(p)
 
     #Tasks: inspect a batch, train a model, test a model, apply a model (class activation)
-
 
 
 

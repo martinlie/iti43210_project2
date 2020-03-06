@@ -10,6 +10,8 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, multilabel_confusion_matrix
 import pathlib
 
+# Orgininally from https://scikit-learn.org/stable/modules/generated/sklearn.metrics.plot_confusion_matrix.html
+# but copied here and a bug for displaying cells correctly in Jupyter fixed
 def plot_confusion_matrix(y_true, y_pred, classes,
                           normalize=False,
                           title=None,
@@ -100,7 +102,9 @@ def read_split_imagefiles(data_dir, class_names):
             df = df.append([{'filename':name, 'class':distinct_class}], ignore_index=True)
 
     traindf, testdf = train_test_split(df, test_size=0.1, random_state=1001)
-    return traindf, testdf
+    traindf, valdf = train_test_split(traindf, test_size=0.1, random_state=1001)
+
+    return traindf, valdf, testdf
 
 def show_confusion(y_test_true, y_test_pred,class_names,mlcm=False):
     cm = confusion_matrix(y_test_true, y_test_pred)
