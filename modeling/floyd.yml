@@ -4,7 +4,7 @@ env: tensorflow-2.1
 input:
   - destination: mnist
     source: hummerfisker/datasets/colorectal-histology-mnist/1
-description: GPU with conv_model and Data Augmentation, difference filters
+description: GPU with conv_model and Data Augmentation, batch norm
 command: python convolutional_nets.py
 
 #max_runtime: 3600

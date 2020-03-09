@@ -150,15 +150,27 @@ def plot_history(H):
 
 
 def show_batch(image_batch, label_batch, class_names):
-    plt.figure(figsize=(10,10))
-    for n in range(25):
-        ax = plt.subplot(5,5,n+1)
+    plt.figure(figsize=(10,5))
+    for n in range(10):
+        ax = plt.subplot(2,5,n+1)
         plt.imshow(image_batch[n])
         plt.title(class_names[label_batch[n]==1][0].title())
         plt.axis('off')
     
     plt.savefig('p_show_batch.png')
     plt.show()
+
+def show_batch_nolabels(image_batch):
+    plt.figure(figsize=(10,5))
+    for n in range(10):
+        ax = plt.subplot(2,5,n+1)
+        plt.imshow(image_batch[n])
+        #plt.title(class_names[label_batch[n]==1][0].title())
+        plt.axis('off')
+    
+    #plt.savefig('p_show_batch.png')
+    plt.show()
+
 
 def test_model(model, generator, class_names):
     Y_pred = model.predict(generator)

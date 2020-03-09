@@ -126,6 +126,9 @@ def main(p):
     #image_batch, label_batch = next(train_generator)
     #show_batch(image_batch, label_batch, class_names)
 
+    #image_batch, label_batch = next(test_generator)
+    #show_batch(image_batch, label_batch, class_names)
+
     print("Training samples: ", train_generator.samples)
     print("Validation samples: ", validation_generator.samples)
     print("Test samples: ", test_generator.samples)
@@ -170,7 +173,7 @@ def main(p):
 
     return model, test_generator, class_names
 
-# Run as
+# Run as:
 # floyd run
 if __name__ == "__main__":
     # Import images

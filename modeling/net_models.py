@@ -25,20 +25,20 @@ def programtest_model(input_shape, class_names):
 
 def convolutional_model(input_shape, class_names):
     model = tf.keras.models.Sequential([
-        layers.Conv2D(32, (11, 11), activation=layers.LeakyReLU(alpha=0.01), input_shape=input_shape),
-        layers.Conv2D(32, (11, 11), activation=layers.LeakyReLU(alpha=0.01)),
+        layers.Conv2D(32, (3, 3), activation=layers.LeakyReLU(alpha=0.01), input_shape=input_shape),
+        layers.Conv2D(32, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
         #layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
         layers.Dropout(0.1),
 
-        layers.Conv2D(64, (7, 7), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.Conv2D(64, (7, 7), activation=layers.LeakyReLU(alpha=0.01)),
+        layers.Conv2D(64, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
+        layers.Conv2D(64, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
         #layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
         layers.Dropout(0.1),
 
-        layers.Conv2D(128, (7, 7), activation=layers.LeakyReLU(alpha=0.01)),
-        layers.Conv2D(128, (7, 7), activation=layers.LeakyReLU(alpha=0.01)),
+        layers.Conv2D(128, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
+        layers.Conv2D(128, (3, 3), activation=layers.LeakyReLU(alpha=0.01)),
         #layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
         layers.Dropout(0.1),
