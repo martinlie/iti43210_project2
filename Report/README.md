@@ -10,3 +10,6 @@ Magenta: Debris
 Pink: Mucosal glands
 Grey: Adipose tissue
 Black: Background
+
+## Reference
+Original images from J. N. Kather et al., “Collection Of Textures In Colorectal Cancer Histology.” Zenodo, 2016, doi: 10.5281/ZENODO.53169. [https://zenodo.org/record/53169#.XmXqcJNKiek](https://zenodo.org/record/53169#.XmXqcJNKiek)
